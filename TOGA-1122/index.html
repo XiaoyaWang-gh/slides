@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title>TOGA:用作测试预言生成的神经网络方法</title>
+    <link rel="shortcut icon" href="./favicon.ico" />
+    <link rel="stylesheet" href="./dist/reset.css" />
+    <link rel="stylesheet" href="./dist/reveal.css" />
+    <link rel="stylesheet" href="./dist/theme/white.css" id="theme" />
+    <link rel="stylesheet" href="./css/highlight/base16/zenburn.css" />
+
+
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides"><section  data-markdown><script type="text/template">
+<style type="text/css"> 
+h1,h2,h3,p{ 
+  text-align: left; 
+}
+h1.c,h2.c,h3.c{
+  text-transform: capitalize;
+}
+img{
+  text-align:left;
+}
+div{
+  display:flex;
+  justify-content: center;
+  vertical-align:middle;
+}
+div.sma{
+  font-size:30px;
+}
+p.right{
+  text-align:right;
+}
+</style> 
+
+## <p align="center">TOGA : A Neural Method for Test Oracle Generation</p>
+<br/>
+<ul>
+    <li>Authors:&emsp;Elizabeth Dinella,Gabriel Ryan,Todd Mytkowicz,Shuvendu K. Lahiri,etc.</li>
+    <li>Published in:&emsp;ICSE'22 (Distinguished Paper Award)</li>
+</ul>
+<br/><br/>
+
+<p class="right">汇报人：王小娅</p>
+<p class="right">汇报时间：11.22</p>
+---
+<h1>Outline</h1>
+<h2>1. Background</h2>
+<h2>2. Approach</h2>
+<h2>3. Experiment</h2>
+<h2>4. Conclusion</h2>
+---
+<h2>Authors  </h2>
+
+<div>
+<div align="left" class="sma"> 
+
+*Elizabeth Dinella<sup>[5]</sup>*<br/><br/>
+I’m a fifth-year PhD student at the University of Pennsylvania advised by Professor Mayur Naik. I recieved my B.S. in computer science from Rensselaer Polytechnic Institute in 2018. I work on models of code for software engineering tasks such as testing, merge conflict resolution, bug finding, and program repair. Recently, I am interested in neural test suite generation. This semester I am head TA for CIS700: Web3 Security.</div>
+<div><img src="toga_pics/elizabeth.png" height="700" width="8000"></div>
+
+</div>
+
+---
+
+*Gabriel Ryan<sup>[6]</sup>*<br/>
+<img src="toga_pics/gabriel.png" height="800" align="left">
+
+---
+
+<h1>1. Background</h1>
+
+---
+
+<h2 class="c">Introduction of test oracle</h2>
+<br/>
+<p>Effective unit tests for a component(a method,class or module) can provide documentation, find bugs, and prevent regressions.</p>
+<p>A test checks for mismatches between intended and implemented functionality.</p>
+<br/>
+<p>A unit test is composed of two parts:</p>
+<p>a prefix, which drives the unit under test to an interesting state;</p>
+<p>an oracle which specifies a condition that the resultant state should satisfy.</p>
+
+---
+A sufficiently expressive test suite should document functionality under both normal invocations where the precondition is met, and exceptional behaviors where the precondition is violated.<br/>
+(a) Normal invocation of pop()
+```
+public void testPop() {
+  Stack<int> s = new Stack<int>(); 
+  int a = 2; 
+
+  s.push(a); 
+  s.pop(); 
+  
+  bool empty = s.isEmpty(); 
+  assertTrue(empty);//这是一个assertion oracle
+}
+```
+(b) Exceptional invocation of pop()
+```
+public void testPop() { 
+  try { 
+    Stack<int> s = new Stack<int>(); 
+    s.pop();
+    
+    Assert.fail(); //fail 
+  }catch (Exception e) {//这是一个exceptional oracle
+    // pass 
+  } 
+}
+```
+---
+
+<h2 class="c">Existing unit test generation methods</h2>
+<h3 class="c">1. Automated test generation tools</h3>
+<p>Randoop -- Use random fuzzing of APIs of a unit to construct test prefixes</p>
+<p>EvoSuite -- Use regression oracles to find future bugs</p>
+<p>Useful for detecting non-functional and regression bugs, but not functional bugs.</p>
+<h3 class="c">2. Specification Mining Methods</h3>
+<p>@Tcomment，ToraDocu，MeMo，C2S，JDoctor</p>
+<p>No need for unit's implementation, rely on docstring documentation. On average, real-world Java projects lack precisely structured docstring documentation.</p>
+<h3 class="c">3. Neural Methods</h3>
+<p>ATLAS(ICSE'20)[1], AthenaTest[2]</p>
+<p>suffers due to the large space of possible candidates</p>
+
+
+---
+
+<h1>2. Approach</h1>
+
+---
+
+<h2 class="c">Taxonomy of commonly occurring oracle</h2>
+
+<div>
+  <img src="toga_pics/taxonomy.png" alt="">
+  <div>
+    The goal is not to express the entire grammar of Java test oracles.<br/><br/>
+    Instead, they aim to identify a minimal syntactic subset which represents many semantically equivalent oracles.
+  </div>
+</div>
+
+<br/>
+
+<h2 class="c">Test oracle grammar</h2>
+
+```
+Test T := O(P) 
+Prefix P := statement | P; P 
+Oracle O(P) := E(P) | R(P) 
+Except Oracle E(P) := try{P; fail();} catch(Exception e){} 
+Return Oracle R(P) := P; A 
+Assertion A := assertEquals(const|var,expr) | 
+               assertTrue(expr) | assertFalse(expr) | 
+               assertNull(expr) | assertNotNull(expr)
+```
+
+---
+*TOGA contains two key components:* 
+**the Exceptional Oracle Classifier** and **the Assertion Oracle Ranker**.
+<br/>
+
+<img src="toga_pics/figure3.png" alt="">
+
+- The system takes as input a test prefix and a unit context.
+- The unit context contains method signature and docstrings, but not the implementation.
+- The system outputs a unit test with an inferred test oracle.
+---
+
+<h2 class="c">Exceptional Oracle Classifier</h2><br/>
+<p>Based on CodeBERT trained on both natrual language and code masking language modeling</p> 
+<p>Finetuned on the task of exceptional oracle inference</p>
+<p>Methods2Test*[3] dataset  432,000 samples (held out 53,705)</p>
+<p>* means : remove the implementation from method under test, add the docstring, remove the oracle from test case and get the binary label</p>
+<p>To prevent info leakage, they rename all the tests in format : testN (rather than testThrowsException)</p>
+
+```
+//数据集格式
+  𝐷 = ((𝑝, 𝑐), 𝑙)1, ...(𝑝, 𝑐), 𝑙)𝑛)
+//输入格式
+  (𝑝, 𝑐)
+//输出格式
+  𝑙 ∈ 0, 1
+```
+
+---
+
+<h2 class="c">Assertion Oracle Ranker</h2><br/>
+<p>Also based on pretrained CodeBERT</p> 
+<p>Finetuned on the task of assertion oracle inference</p>
+<p>Atlas*[7] dataset   170,000 samples (held out 8,024)</p>
+<p></p>
+<br/>
+
+```
+//数据集格式
+  𝐷 = ((𝑝, 𝑐, 𝑎), 𝑙)1, ...(𝑝, 𝑐, 𝑎), 𝑙)𝑛
+//输入格式
+  (𝑝, 𝑐, 𝑎)
+//输出格式  
+  𝑙 ∈ 0, 1
+```
+
+---
+
+<h2 class="c">Candidate Assertion Set Generation</h2>
+
+Global Constant Dictionary : the top K values of each type.<br/>
+Local Dictionary : values that appear in the test prefix.
+
+```
+1: procedure CreateCandidateTemplates(GlobalDict, k, test) 
+2:    𝑐𝑠 ← ∅ // Template Candidates 
+3:    retVal = extractRetVal(test) 
+4:    t = type(retVal) 
+5:    LocalDict = createLocalDict(test) 
+6:    if retVal is an object then 
+7:        𝑐𝑠 ← 𝑐𝑠 ∪ assertNull(retVal) 
+8:        𝑐𝑠 ← 𝑐𝑠 ∪ assertNotNull(retVal) 
+9:    else if retVal is a boolean then 
+10:       𝑐𝑠 ← 𝑐𝑠 ∪ assertTrue(retVal) 
+11:       𝑐𝑠 ← 𝑐𝑠 ∪ assertFalse(retVal) 
+12:   for globalVal ∈ GlobalDict.get(t) do 
+13:       𝑐𝑠 ← 𝑐𝑠 ∪ assertEquals(globalVal, retVal) 
+14:   for localVal ∈ LocalDict.get(t) do 
+15:       𝑐𝑠 ← 𝑐𝑠 ∪ assertEquals(localVal, retVal) 
+16:   return 𝑐𝑠 
+17: 
+18: procedure CreateLocalDict(test) 
+19:     LocalDict = {} 
+20:       for val in getValue(test) do // Loop over all values in prefix 
+21:         LocalDict[type(val)] += {val} 
+22:     return LocalDict 
+```
+The Ranker outputs a label with a confidence score, and select the highest ranked assertion.
+
+---
+
+<h2 class="c">End-to-End EvoSuite integration</h2><br/>
+<p>Use the randomized test generation tool Evosuite</p>
+<p>Extract test prefixes by stripping oracles from each test</p>
+<p>For each test prefix, invoke TOGA to infer a test oracle.</p><br/>
+
+```
+1: procedure extractRetVal(test) 
+2:     assign = getLastLine(test) // last line will be an assignment 
+3:     retVal = getLHS(assign) 
+4:     return retVal
+```
+---
+
+<h1>3. Experiment</h1>
+
+---
+
+<h3><b>RQ1</b> - Is TOGA’s grammar representative of most developer-written assertions? </h3>
+<h3><b>RQ2</b> - Can TOGA infer assertions and exceptional behavior with high accuracy? </h3>
+<h3><b>RQ3</b> - Can TOGA catch bugs with low false alarms?</h3>
+
+
+
+---
+
+RQ1 Is TOGA’s grammar representative of most developer-written assertions?<br/><br/> 
+The origin ATLAS dataset  188,157 assertions mined from Java projects<br/>
+Parse each assertion, check if it can be expressed in the grammar based on assertion method name and AST<br/>
+<img src="toga_pics/RQ1_res.png" height="250"><br/>
+Non-matching, but symbolically equivalent
+```
+assertThat(counter.get(),CoreMatchers.equalTo(2)) 
+vs. 
+assertEquals(counter.get(),2)
+```
+---
+RQ2 Can TOGA infer assertions and exceptional behavior with high accuracy?<br/><br/> 
+exceptional oracle inference | a random baseline (weighted coin)
+<img src="toga_pics/table1.png"><br/>
+assertion oracle inference | seq2seq<br/>
+<img src="toga_pics/table2.png">
+
+---
+RQ2 Can TOGA infer assertions and exceptional behavior with high accuracy? <br/><br/>
+Vocabulary size ablation<br/>
+Tradeoff between *<b>generating a larger number of assertion candidates</b>* and *<b>ranking the assertion candidates accurately</b>*<br/><br/>
+<img src="toga_pics/figure5.png" align="center" height="500">
+
+---
+RQ3 Can TOGA catch bugs with low false alarms?
+
+<img src="toga_pics/baselines.png" alt="" height="270"><br/>
+Defects4J benchmark:Consider a bug is found if a generated test both fails on the buggy program and passes on the fixed program(TP)<br/>
+<img src="toga_pics/figure6.png" height="240"><br/>
+A method that generates many erroneously failing tests will not usable in a realistic application setting(FP)
+---
+TOGA finds 57 total bugs, including 30 not found by any other method,<br/>
+and it's FPR is lower that Randoop.<br/>
+<img src="toga_pics/table3.png" alt=""><br/>
+A breakdown of found bugs<br/>
+TOGA's ability to infer exception oracles correctly is critical<br/>
+<img src="toga_pics/table4.png" alt=""><br/>
+---
+
+<h1>4. Conclusion</h1>
+
+---
+
+<h2 class="c">Strengths</h2>
+<p> 提出的预言生成方法同时考虑了正向和反向用例。</p>
+<p> 输入不要求被测单元的实现。</p>
+
+<h2 class="c">Weaknesses</h2>
+
+<p> Baselines没有选择SOTAs.</p>
+<p> 没有说明如何预测出异常类型。</p>
+<p> 依赖TOGA提供test prefix,835个缺陷只触及120个。(有效性威胁部分提及)</p>
+
+<h2 class="c">Insights</h2>
+<p> 学到了defects4j进行测试用例评估的方式和标准，特别是FPR.</p>
+<p> 学习了观察->分类->定义语法->形成方法的思路。</p>
+
+
+---
+
+<h2>REFERENCES</h2>
+<p><a href="https://arxiv.org/abs/2002.05800">[1] On Learning Meaningful Assert Statements for Unit Test Cases</a></p>
+<p><a href="https://arxiv.org/abs/2009.05617">[2] Unit Test Case Generation with Transformers and Focal Context</a></p>
+<p><a href="https://github.com/microsoft/methods2test">[3] 数据集 microsoft/methods2test</a></p>
+<p><a href="https://github.com/microsoft/toga">[4] 本文开源地址 microsoft/toga</a></p>
+<p><a href="https://www.seas.upenn.edu/~edinella/">[5] Elizabeth Dinella's homepage</a></p>
+<p><a href="https://www.cs.columbia.edu/~gabe/">[6] Gabriel Ryan's homepage</a></p>
+<p><a href="https://gitlab.com/cawatson/atlas---deep-learning-assert-statements/tree/master/Datasets">[7] 数据集 atlas dataset </a></p>
+<p><a href="https://www.youtube.com/watch?v=zijmsCclOjw">[8] 作者对论文的解读视频</a></p>
+---
+
+<h1>THANKS</h1>
+
+---</script></section></div>
+    </div>
+
+    <script src="./dist/reveal.js"></script>
+
+    <script src="./plugin/markdown/markdown.js"></script>
+    <script src="./plugin/highlight/highlight.js"></script>
+    <script src="./plugin/zoom/zoom.js"></script>
+    <script src="./plugin/notes/notes.js"></script>
+    <script src="./plugin/math/math.js"></script>
+    <script>
+      function extend() {
+        var target = {};
+        for (var i = 0; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      }
+
+      // default options to init reveal.js
+      var defaultOptions = {
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        transition: 'default', // none/fade/slide/convex/concave/zoom
+        plugins: [
+          RevealMarkdown,
+          RevealHighlight,
+          RevealZoom,
+          RevealNotes,
+          RevealMath
+        ]
+      };
+
+      // options from URL query string
+      var queryOptions = Reveal().getQueryHash() || {};
+
+      var options = extend(defaultOptions, {"width":1520,"height":950,"margin":0.04,"progress":true,"slideNumber":true}, queryOptions);
+    </script>
+
+
+    <script>
+      Reveal.initialize(options);
+    </script>
+  </body>
+</html>
