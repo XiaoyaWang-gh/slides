@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title>RepoLevelCodeGen</title>
+    <link rel="shortcut icon" href="./favicon.ico" />
+    <link rel="stylesheet" href="./dist/reset.css" />
+    <link rel="stylesheet" href="./dist/reveal.css" />
+    <link rel="stylesheet" href="./dist/theme/serif.css" id="theme" />
+    <link rel="stylesheet" href="./css/highlight/base16/zenburn.css" />
+
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section data-markdown data-separator="<!--s-->" data-separator-vertical="<!--s-->">
+          <textarea data-template>
+            
+<style type="text/css"> 
+h1,h2,h3,h4,p{ 
+  text-align: left; 
+}
+h1.c,h2.c,h3.c{
+  text-transform: capitalize;
+}
+h1.n,h2.n,h3.n,h4.n{
+  text-transform: none;
+}
+h3.small{
+  font-size: 55px;
+}
+
+img{
+  text-align:left;
+}
+img.center{
+  display: block; /* This is important for margin:auto to work */
+  margin-left: 100px;
+}
+img.fl{
+  float:left;
+}
+img.logo{
+  margin-top: -30px;
+  margin-bottom: -10px;
+  max-width: 20%; 
+  height: 60px; 
+}
+div.sma{
+  font-size:35px;
+  margin:40px 10px;
+}
+p.right{
+  text-align:right;
+  margin-right:100px;
+}
+p.main{
+  font-size:28px;
+}
+h2.center,h3.center{
+  text-align:center;
+}
+img.tem{
+  border-radius: 8pt;
+  height:700px;
+}
+#outter{
+  display:flex;
+  justify-content: space-around;
+}
+div.outter{
+  display:flex;
+  justify-content: center;
+}
+div.inner{
+  display:flex;
+  flex-direction: column;
+  align-items:start;
+  justify-content: space-evenly;
+}
+div.inner1{
+  display:flex;
+  flex-direction: column;
+  align-items:start;
+  justify-content: center;
+}
+div.shell{
+  margin-top: -100px;
+  margin-left:70px;
+}
+#ref{
+  margin-left:100px;
+  margin-top: -100px;
+}
+#cat{
+  display:flex;
+  flex-direction: column;
+  justify-content:center;
+}
+span.green{
+  color: #609966;
+}
+span.red{
+  color: #EF5350;
+}
+span.yellow{
+  color: #FFE17B;
+}
+span.blue{
+  color: #5CD2E6;
+}
+</style> 
+
+<div class="shell">
+  <h2 class="c">Context-Aware Code Generation Framework for Code Repositories:
+  Local, Global, and Third-Party Library Awareness</h2>
+  <br/>
+  <div style="text-align:left">
+  <ul>
+      <li>Authors:&emsp;Dianshu Liao, Shidong Pan et al.</li>
+      <li>Source:&emsp;arxiv(2023.12)</li>
+  </ul>
+  <br/><br/>
+  </div><p class="right">汇报人 王小娅</p>
+  <p class="right">汇报时间：03.12      </p>
+</div>
+
+<!--s-->
+
+<div class="shell">
+  <h2 class="c">CODEAGENT: Enhancing Code Generation with Tool-Integrated Agent Systems 
+  for Real-World Repo-Level Coding Challenges</h2>
+  <br/>
+  <div style="text-align:left">
+  <ul>
+      <li>Authors:&emsp;Kechi Zhang<sup>*</sup>, Jia Li<sup>*</sup> et al.</li>
+      <li>Source:&emsp;arxiv(2024.01)</li>
+  </ul>
+
+</div>
+
+<!--s-->
+
+<div class="shell">
+<h1 class="c">Authors</h1>
+</div>
+
+<!--s-->
+
+<div class="shell" style="margin-top:-130px">
+  <div class="outter">
+    <div class="inner" style="margin-right:300px">
+      <h3 class="n">A3-CODGEN</h3>
+        <p><em>First Author</em></p>
+        <a href="https://scholar.google.com/citations?hl=zh-CN&user=_0AQOHEAAAAJ&view_op=list_works&sortby=pubdate">Dianshu Liao</a>
+        <p><em>Second Author</em></p>
+        <a href="https://scholar.google.com/citations?hl=en&user=IPz6ilYAAAAJ&view_op=list_works&sortby=pubdate">Shidong Pan</a>
+    </div>
+    <div class="inner" >
+      <h3 class="n">CODEAGENT</h3>
+        <p><em>Co-First Authors</em></p>
+        <a href="https://scholar.google.com/citations?hl=en&user=6AuwtXwAAAAJ&view_op=list_works&sortby=pubdate">Kechi Zhang</a>
+        <a href="https://lj2lijia.github.io/">李佳</a>
+        <p><em>Corresponding Authors</em></p>
+        <a href="https://scholar.google.com/citations?hl=en&user=ZC7SObAAAAAJ&view_op=list_works&sortby=pubdate">金芝</a>
+        <a href="https://ligechina.github.io/">李戈</a>
+    </div>
+  </div>
+</div>
+
+<!--s-->
+
+<div class="shell">
+<h1 class="c">PartⅠ. Background</h1>
+</div>
+
+<!--s-->
+
+<!-- 左图右文 -->
+<div class="shell">
+  <h3>The gap between code generation tools and real developers</h3>
+  <div class="outter">
+    <img src="pics/A3CodGen/draw 1.png" style="width:40%">
+    <div class="inner1" style="margin-left:100px">
+      <p>1. the current working context : function signatures and variables & the relative file paths of the module within the project</p>
+      <p>2. functions from other code files within the same repository</p>
+      <p>3. third-party libraries that are already pre-installed in the code repository’s environment</p>
+    </div>
+  </div>  
+</div>
+<!-- 结尾：没有哪个工具同时考虑到以上三点 -->
+
+<!--s-->
+
+<div class="shell">
+<h1 class="c">PartⅡ. Motivation</h1>
+</div>
+
+<!--s-->
+
+<!-- 纵向文字 -->
+
+<div class="shell" style="margin-top:-90px">
+  <div class="inner" >
+    <h3 class="n">the motivation of this study</h3>
+    <p>1. Limitation Of Existing Code Generation Approaches</p>
+    <ul>
+      <li>Observation 1: the content and quality of generated codes heavily depend on the human-crafted prompts</li>
+      <li>Observation 2: focus on generating independent and often small-scale code units</li>
+      <li>Observation 3: perform poorly in complicated data structures such as tree structure and graph theory</li>
+    </ul>
+  </div>
+</div>
+
+<!--s-->
+
+<!-- 上图下文 -->
+<div class="shell">
+  <p>2. Code Generation in Code Repository</p>
+  <div class="inner">
+    <p>lacks functional constraints & contains redundancies & with the generated code not working.</p> 
+    <img src="pics/A3CodGen/fig 1.png" style="width:85%">
+  </div>
+  <p>3. Bridging the Gap: Making LLMs Aware of Three Types of Repository Knowledge</p>  
+</div>
+
+<!--s-->
+
+<div class="shell">
+<h1 class="c">PartⅢ. Technique</h1>
+</div>
+
+<!--s-->
+
+<!-- 上图下文 -->
+<div class="shell" style="margin-top:-140px">
+  <h2>𝐴3-CODGEN FRAMEWORK</h2>
+  <div class="inner">
+    <img src="pics/A3CodGen/fig 2.png" style="width:80%">
+  </div>
+</div>
+<!-- 参考引言中的蓝色高亮介绍这幅图 -->
+
+<!--s-->
+
+<!-- 左图右文 -->
+<div class="shell">
+  <h3>1 Repository Knowledge Base Construction</h3>
+  <div class="outter">
+    <img src="pics/A3CodGen/fig 3.png" style="width:50%">
+    <div class="inner1" style="margin-left:80px">
+      <p>1.1 Code Repository Information Extraction</p>
+      <img src="pics/A3CodGen/draw 2.png" style="width:60%">
+      <p>1.2 Third-Party Library Extraction</p>
+      <p></p>
+    </div>
+  </div>
+  <p>Six essential types of basic information(by <span class="red">AST</span>): 1) Comment, 2) Signature, 3) Function Source code, 4) Class associated with the function, 5) Is_Empty tag, 6) The file path of the function.</p>
+  <p>Getting vector representations in a dual-pronged approach : conducting separate embeddings for both <span class="green">the source code</span> and <span class="green">the function summaries.</span></p>
+</div>
+
+<!--s-->
+
+<!-- 左图右文 -->
+<div class="shell">
+  <h3>2 Three Types of Repo-Aware Knowledge Retrieval</h3>
+  <div class="outter">
+    <div class="inner1" style="margin-right:20px">
+      <p>2.1 Local-Module<br>Knowledge Mining</p>
+      <img src="pics/A3CodGen/draw 3.png" style="width:70%">
+    </div>
+    <img src="pics/A3CodGen/fig 4.png" style="width:80%">
+  </div>  
+</div>
+
+<!--s-->
+
+<!-- 左图右文 -->
+<div class="shell">
+  <h3>2' Three Types of Repo-Aware Knowledge Retrieval</h3>
+  <div class="outter">
+    <div class="inner1" style="margin-right:200px">
+      <p>2.2 Global-Module Knowledge Mining</p>
+      <img src="pics/A3CodGen/draw 4.png" style="width:80%">
+      <p>2.3 Third-Party Library Knowledge Mining</p>
+      <p>i.e. create a comprehensive list</p>
+    </div>
+    <img src="pics/A3CodGen/fig 5-a.png" style="width:30%">
+  </div>  
+</div>
+
+<!--s-->
+
+<!-- 左图右文 -->
+<div class="shell">
+  <h3>3 Utilize the mined knowledge for generation</h3>
+  <div class="outter">
+    <img src="pics/A3CodGen/fig 5-b.png" style="width:50%">
+  </div>  
+</div>
+
+<!--s-->
+
+<div class="shell">
+<h1 class="c">PartⅣ. Experiments</h1>
+</div>
+
+<!--s-->
+
+<div class="shell">
+<!-- 4个RQs, 分上下左右四块 -->
+  <div class="outter">
+    <div class="inner" style="margin-right:50px">
+      <div>
+        <h4 class="n">RQ1 - Does <span class="red">Local Module</span> Aware Knowledge indeed help LLMs fully utilize local module knowledge during code generation, and which types are most effective in improving local awareness?</h4>
+      </div>
+      </br>
+      <div>
+        <h4 class="n">RQ2 - Is <span class="red">Global Module</span> Aware Knowledge effective in assisting LLMs to utilize global module knowledge during code generation, and what is the optimal “k” value for retrieving global functions?</h4>
+      </div>
+    </div>
+    <div class="inner">
+      <div>
+        <h4 class="n">RQ3 - Does <span class="red">Third-Party Library</span> Aware Knowledge significantly impact LLMs’ awareness of available third-party libraries during code generation?</h4>
+      </div>
+      </br>
+      <div>
+        <h4 class="n">RQ4 - What is the performance of our 𝐴3-CodGen framework?</h4>
+      </div>     
+    </div>
+  </div>
+</div>
+
+<!--s-->
+
+<!-- 纵向文字 -->
+
+<div class="shell" style="margin-top:-120px">
+  <div class="inner" >
+    <h3 class="n">Dataset Collection : <em>RepoEval</em></h3>
+    <p>Step1 - Code Repository Collection</p>
+    <ul>
+      <li>the earliest release date after October 1, 2021</li>
+      <li>more than 100 stars, 100 forks, 10 code files</li>
+    </ul>
+    <p>Step2 - Benchmark Construction</p>
+    <img src="pics/A3CodGen/draw 5.png" style="width:70%">
+</div>
+
+<!--s-->
+
+<!-- 纵向文字 -->
+
+<div class="shell" style="margin-top:-90px">
+  <div class="inner" >
+    <h3 class="n">Metrics and Foundation Models</h3>
+    <p>✴ Metrics</p>
+      <ul>
+        <li>Precision - how much of the code generated by the model is reused correctly.</li>
+        <li>Recall - how much of the code that really needed to be reused was correctly reused by the model.</li>
+        <li>F1 Score - measures the overall effectiveness of the model in reusing code.</li>
+        <li>Library Coverage - the proportion of libraries used that are already pre-installed.</li>
+        <li>Lines of Code (LOC) - fewer lines indicate that the generated code is more concise.</li>
+        <li>CodeBLEU - weighted average of the lexical, abstract syntax tree, and data flow matches.</li>
+      </ul>
+    <p>✴ Foundation Models</p>
+      <ul>
+        <li><em>gpt-3.5-turbo</em> model</li>
+        <li><em>ada-embedding-002</em> model</li>
+      </ul>
+</div>
+
+<!--s-->
+
+<!-- 上图下文 -->
+<div class="shell" style="margin-top:-140px">
+  <h3>The Effectiveness of Local-Aware Knowledge (RQ1)</h3>
+  <div class="inner">
+    <img src="pics/A3CodGen/table 1.png" style="width:80%">
+  </div>
+  <p>Finding 1: The Local-Aware Knowledge significantly enhances the model’s ability to reuse local functions, thereby reducing code redundancy. The best configuration is the combination of Local Functions and Class Instance Attributes.</p>
+</div>
+
+<!--s-->
+
+<!-- 上图下文 -->
+<div class="shell" style="margin-top:-140px">
+  <h3>The effectiveness of Global-Module-Aware Knowledge (RQ2)</h3>
+  <div class="inner">
+    <img src="pics/A3CodGen/table 2.png" style="width:80%">
+  </div>
+  <p><em>No Global-Aware</em> baseline: only Local-Aware Knowledge without Global-Aware Knowledge input</p>
+  <p>Finding 2: Global-Aware Information significantly enhances the model’s ability to reuse functions in other code files in the repository. The optimal configuration for retrieving global functions is k=5.</p>
+  <p><span class="red">The functions in metric are global functions.</span></p>
+</div>
+
+<!--s-->
+
+<!-- 上图下文 -->
+<div class="shell" style="margin-top:-140px">
+  <h3>The effectiveness of Third-Party-Library-Aware Knowledge (RQ3)</h3>
+  <div class="inner">
+    <img src="pics/A3CodGen/table 3.png" style="width:80%">
+  </div>
+  <p><em>No Third-Party-Library-Aware</em> baseline: only Local-Aware and Global-Aware information is fed into the model.</p>
+  <p>Finding 3: Third-Party-Library Aware information significantly improves the model’s ability to utilize available third-party libraries, reducing the risk of potential compatibility issue.</p>
+</div>
+
+<!--s-->
+
+<!-- 上图下文 -->
+<div class="shell" style="margin-top:-140px">
+  <h3>The Effectiveness of 𝐴3CodGen Framework (RQ4)</h3>
+  <div class="inner">
+    <img src="pics/A3CodGen/table 4.png" style="width:65%">
+  </div>
+  <p>Finding 4: 𝐴3-CodeGen maximizes code reuse, and to some extent, the quality of the generated code surpasses that of the ground truth.</p>
+</div>
+
+<!--s-->
+
+<div class="shell">
+<h1 class="c">PartⅠ. Background</h1>
+</div>
+
+<!--s-->
+
+<!-- 纵向图文 -->
+
+<div class="shell" style="margin-top:-120px">
+  <div class="inner" >
+    <h3 class="n">Unrealistic Benchmarks</h3>
+    <img src="pics/CODEAGENT/mbpp.png" style="width:70%">
+    <p>✴ mainly focus on simple generation scenarios including <span class="green">statement-level</span> and <span class="green">function-level</span> code generation</p>
+    <p>✴ only generate standalone code units</p>
+    <p>✴ only provide limited constraint information to LLMs, such as the requirements, signature information, and restricted code dependencies.</p>
+</div>
+
+<!--s-->
+
+<div class="shell">
+<h1 class="c">PartⅡ. Benchmark</h1>
+</div>
+
+<!--s-->
+
+<!-- 左图右图 -->
+<div class="shell">
+  <h3>Benchmark Composition</h3>
+  <div class="outter" style="margin-top:30px">
+    <img src="pics/CODEAGENT/table 2.png" style="width:40%;margin-right:80px">
+    <img src="pics/A3CodGen/draw 6.png" style="width:48%">
+  </div>  
+</div>
+
+<!--s-->
+
+<div class="shell" style="margin-top:-120px">
+  <div class="inner" >
+    <h3 class="n">Documentation</h3>
+      <ul>
+        <li>the NL requirements</li>
+        <li>class-level (class name, signature, and member function) and function-level (functional description, and params description) information</li>
+        <li>the type and interpretation of input parameters and output values</li>
+        <li>explains to domain-specific terminologies</li>
+      </ul>
+      <br>
+    <h3 class="n">Contextual Dependency</h3>
+      <ul>
+        <li>they developed a static analysis tool using <em>tree-sitter</em> to extract all userdefined elements and public library names from each file -> knowledge base</li>
+        <li>for any given function, we use this knowledge base to locate its source file, parse the file, and finally determine its contextual dependencies by exact matching of symbol names and scopes</li>
+      </ul>
+</div>
+
+<!--s-->
+
+<div class="shell" style="margin-top:-120px">
+  <div class="inner" >
+    <h3 class="n">Runtime Environment</h3>
+      <ul>
+        <li>they build a sandbox environment for each task, which contains all configurations needed to run the repository and offers convenient interaction to ensure an all-sided evaluation</li>
+      </ul>
+    <h3 class="n">Canonical Solution</h3>
+      <ul>
+        <li>use the answers included in the repository as the initial solutions and invite three participants to manually refine them.</li>
+      </ul>
+    <h3 class="n">Self-Contained Test Suite</h3>
+      <ul>
+        <li>extract the test cases included in the repository as the initial solutions and invite two participants to manually refine them.</li>
+        <li>treat the generated program correctly only if its output aligns with all ground truths of the test suite.</li>
+      </ul>
+</div>
+
+<!--s-->
+
+
+<!-- 上图下文 -->
+<div class="shell" style="margin-top:-120px">
+  <h3>Benchmark Composition(example)</h3>
+  <div class="inner" style="margin-top:20px">
+    <img src="pics/CODEAGENT/fig 1.png" style="width:90%">
+  </div>
+</div>
+
+<!--s-->
+
+<!-- 纵向图文 -->
+
+<div class="shell" style="margin-top:-120px">
+  <div class="inner" >
+    <h3 class="n">Benchmark Construction Process</h3>
+    <h3 class="n">Advantages of CODEAGENTBENCH</h3>
+    <p>✴ it is closer to real-world code generation scenarios</p>
+    <p>✴ provides self-contained information, can efficiently prompt LLMs for repo-level code generation</p>
+</div>
+
+<!--s-->
+
+<div class="shell">
+<h1 class="c">PartⅢ. Method</h1>
+</div>
+
+<!--s-->
+
+<!-- 左图右图 -->
+<div class="shell">
+  <h3>Overview of our CODEAGENT</h3>
+  <div class="outter" style="margin-top:10px">
+    <img src="pics/CODEAGENT/fig 3.png" style="width:40%;margin-right:80px">
+    <div class="inner">
+      <p>A novel LLM-based agent framework CODEAGENT that leverages external tools to enhance the problem-solving abilities of LLMs in intricate repo-level code generation.</p>
+      <img src="pics/CODEAGENT/table 3.png" style="width:80%">
+    </div>
+  </div>  
+</div>
+
+<!--s-->
+
+<div class="shell" style="margin-top:-120px">
+  <div class="inner" >
+    <h3 class="n">Information Retrieval Tools</h3>
+      <p>Responsible for analyzing repositories and collecting resources, which is pivotal in understanding the problem domain</p>
+      <ul>
+        <li>Website Search<span class="red"> WebSearch(input_query)</span>: uses <em>DuckDuckGo</em> to choose the most relevant websites, and then apply LLMs to summarize the website content as the final tool output.</li>
+        <li>Documentation Reading<span class="red"> DocSearch(input_name)</span>: Given a class name or function name, use <em>BM25</em> to etrieve correlative content from the documentation.</li>
+      </ul>
+  </div>
+
+<!--s-->
+
+<div class="shell" style="margin-top:-120px">
+  <div class="inner" >
+    <h3 class="n">Code Implementation Tools</h3>
+      <p>Code Symbol Navigation <span class="red"> SymbolSearch(module_path or input_name)</span></p>
+      <p>Based on tree-sitter, this tool explores code items from two types:</p>
+      <ul>
+        <li>file or module-oriented parsing : global variables, function names, and class names</li>
+        <li>given a class or function name, the tool finds its definition from the code repository</li>
+      </ul>
+      <p>Combining the two types, this tool can traverse predefined source code within a repository, empowering LLMs to understand intricate dependencies and reuse codes.</p>
+</div>
+
+<!--s-->
+
+<div class="shell" style="margin-top:-120px">
+  <div class="inner" >
+    <h3 class="n">Self-Contained Test Suite</h3>
+      <p>After acquiring generated codes, use code testing tools to format and test them, enhancing their correctness and readability.</p>
+      <ul>
+        <li>Format Checker<span class="red"> FormatCheck()</span>: use <em>Black</em> to execute generated codes and checks format errors such as indentation misalignment and missing keywords</li>
+        <li>Code Interpreter<span class="red"> PythonREPL(input_code)</span>: focuses on examining the syntax and function of programs</li>
+      </ul>
+</div>
+
+<!--s-->
+
+<div class="shell" style="margin-top:-120px">
+  <div class="inner" >
+    <h3 class="n">Agent Strategy</h3><br>
+    <p>1 - ReAct (Yao et al., 2022)</p>
+    <p>2 - Tool-Planning (Wang et al., 2023b)</p>
+    <p>3 - OpenAIFunc (OpenAI-Function, 2023)</p>
+    <p>4 - Rule-based Tool Usage</p>
+    <br>
+    <p>These agent strategies are put forward to augment LLMs’ reasoning and problem-solving abilities.</p>
+</div>
+
+<!--s-->
+
+<!-- 上图下文 -->
+<div class="shell" style="margin-top:-120px">
+  <h3>ReAct</h3>
+  <div class="inner" style="margin-top:20px">
+    <img src="pics/CODEAGENT/react.png" style="width:80%">
+  </div>
+  <p>A general paradigm that synergizes reasoning and acting with LLMs, while also interacts with the external environments to incorporate additional information.</p>
+  <p>In repo-level code generation, ReAct prompts LLMs to generate reasoning traces and task-related actions in an interlaced fashion.</p>
+</div>
+
+<!--s-->
+
+<!-- 纵向文字 -->
+<div class="shell" style="margin-top:-120px">
+  <h3>Tool-Planning</h3>
+    <p>A variant of Planning strategy, can invoke proper tools based on the plan.</p>
+    <p>First makes a plan to divide an entire task into several subtasks and then performs subtasks according to the plan.</p>
+  <h3>OpenAIFunc</h3>
+    <p>Provide the function-calling interface with external tools</p>
+    <p>It then determines the time and type of invoking tools, and offers the input to the called tools.</p>
+  <h3>Rule-based Tool Usage</h3>
+    <p>The strategy defines the order of tool usage and interlinks these tools through prompts.</p>
+    <p>For each part, the large model will autonomously cycle through the use of tools until it decides to move on to the next part or the cycle reaches its limit<span class="red"> (<=3)</span>.</p>
+</div>
+
+<!--s-->
+
+<div class="shell">
+<h1 class="c">PartⅣ. Experiments</h1>
+</div>
+
+<!--s-->
+
+<!-- 4个RQs, 分上下左右四块 -->
+  <div class="outter">
+    <div class="inner" style="margin-right:50px">
+      <div>
+        <h4 class="n">RQ1 -How much can CODEAGENT improve the advanced code generation LLMs on CODEAGENTBENCH (e.g., repo-level code generation)</h4>
+      </div>
+      </br>
+      <div>
+        <h4 class="n">RQ2 - What is the improvement of our CODEAGENT on classical code generation such as HumanEval</h4>
+      </div>
+    </div>
+    <div class="inner">
+      <div>
+        <h4 class="n">RQ3 - To what extent do our selected tools in the agent system help for repo-level coding</h4>
+      </div>
+      </br>
+      <div>
+        <h4 class="n">RQ4 - How helpful is CODEAGENT for human programmers compared with the commercial code generation products</h4>
+      </div>     
+    </div>
+  </div>
+</div>
+
+<!--s-->
+
+<!-- 左文右文 -->
+<div class="shell">
+  <h3>Experiment Setup</h3>
+  <div class="outter" style="margin-top:10px">
+    <div class="inner" style="margin-left:-400px">
+      <p>Dataset</p>
+      <ul>
+        <li>CODEAGENTBENCH</li>
+        <li>HumanEval</li>
+      </ul>
+      <p>Metrics</p>
+      <ul>
+        <li>Pass@1</li>
+        <li>The number of solved problems</li>
+      </ul>
+    </div>
+    <div class="inner" style="margin-left:200px">
+      <p>Base LLMs</p>
+        <ul>
+          <li>GPT-3-davinci</li>
+          <li>GPT3.5-turbo</li>
+          <li>GPT-4-turbo</li>
+          <li>Claude-2</li>
+          <li>Llama2-70Bchat</li>
+          <li>CodeLlama-34B</li>
+          <li>WizardCoder-34B</li>
+          <li>DeepSeek-33B</li>
+          <li>Vicuna-13B</li>
+        </ul>
+    </div>
+  </div>  
+</div>
+
+<!--s-->
+
+
+<!-- 上图下文 -->
+<div class="shell" style="margin-top:-140px">
+  <h3>Repo-level Coding Task (RQ1)</h3>
+  <div class="inner">
+    <img src="pics/CODEAGENT/table 4.png" style="width:80%">
+  </div>
+  <p>Finding 1: the tools integrated within CODEAGENT provide crucial repo-level information, aiding LLMs in producing accurate code solutions and effectively tackling complex repo-level coding challenges.</p>
+</div>
+<!-- 本页首先介绍noagent是怎么回事 -->
+
+<!--s-->
+
+<!-- 上图下文 -->
+<div class="shell" style="margin-top:-140px">
+  <h3>Function-level Coding Task (RQ2)</h3>
+  <div class="inner">
+    <img src="pics/CODEAGENT/table 5.png" style="width:80%">
+  </div>
+  <p>Finding 2: again highlight the efficacy of CODEAGENT in enhancing the performance of code LLMs across all metrics.</p>
+</div>
+
+<!--s-->
+
+<!-- 上图下文 -->
+<div class="shell" style="margin-top:-140px">
+  <h3>Ablation Study (RQ3)</h3>
+  <div class="inner">
+    <img src="pics/CODEAGENT/table 6.png" style="width:50%">
+  </div>
+  <p>Finding 3: The code symbol navigation tool is particularly pivotal & the ablation results confirm that each tool in our agent system contributes positively to the overall improvement.</p>
+</div>
+
+<!--s-->
+
+<!-- 上图下文 -->
+<div class="shell" style="margin-top:-140px">
+  <h3>Compared with Commercial Products (RQ4)</h3>
+  <div class="inner">
+    <img src="pics/CODEAGENT/table 7.png" style="width:50%">
+  </div>
+  <p>Finding 4: CODEAGENT works better than existing products on complex coding scenarios.</p>
+</div>
+
+<!--s-->
+
+<div class="shell">
+<h1 class="c">PartⅤ. Summary</h1>
+</div>
+
+<!--s-->
+
+<div class="shell">
+
+  <div id="inner">
+    <h2 class="n">Conclusion</h2><br>
+    <p>1. A3CODGEN is a code generation framework, which is designed to construct, mine, and unify three essential types of code repository knowledge: local-aware, global-aware, and third-party-library aware knowledge.</p>
+    <p>2. CODEAGENTBENCH is a new benchmark for repo-level code generation that includes rich information about the code repository.</p>
+    <p>3. CODEAGENT is a an agent-based framework that uses external tools to assist with LLMs for repo-level code generation.</p>
+    <p>4. The two papers are closely related(e.g. code symbol navigation to information for code repository) but with different perspectives.</p>
+  </div>
+  
+</div>
+
+<!--s-->
+
+
+<div class="shell">
+
+  <div id="inner">
+    <h2 class="n">Strengths</h2>
+    <p>1. A3CODGEN: conducts a thorough exploration of code repository knowledge</p>
+    <p>2. CODEAGENT: raises an important question</p>
+    <h2 class="n">Weaknesses</h2>
+    <p>1. A3CODGEN: Subjective Labeling & No Comparison with SOTAs</p>
+    <p>2. CODEAGENT: Black-box Prompts & the comparison with commercial products is not rigorous</p>
+  </div>
+
+</div>
+
+<!--s-->
+
+<div class="shell">
+
+  <div id="inner">
+    <h2 class="n">Insights</h2><br>
+    <p>1. A3CODGEN: representative information in the code repository and two tricks.</p>
+    <p>2. CODEAGENT: tools and strategies for code generation.</p>
+  </div>
+  
+</div>
+
+<!--s-->
+
+<div class="shell">
+<h2 class="c">Thank you for watching</h2>
+</div>
+
+
+          </textarea>
+        </section>
+      </div>
+    </div>
+
+    <script src="./dist/reveal.js"></script>
+
+    <script src="./mermaid/dist/mermaid.min.js"></script>
+
+    <script src="./plugin/markdown/markdown.js"></script>
+    <script src="./plugin/highlight/highlight.js"></script>
+    <script src="./plugin/zoom/zoom.js"></script>
+    <script src="./plugin/notes/notes.js"></script>
+    <script src="./plugin/math/math.js"></script>
+    <script>
+      function extend() {
+        var target = {};
+        for (var i = 0; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      }
+
+      // default options to init reveal.js
+      var defaultOptions = {
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        transition: 'default', // none/fade/slide/convex/concave/zoom
+        slideNumber: true,
+        highlight: {
+          highlightOnLoad: false
+        },
+        plugins: [
+          RevealMarkdown,
+          RevealHighlight,
+          RevealZoom,
+          RevealNotes,
+          RevealMath
+        ]
+      };
+
+      // options from URL query string
+      var queryOptions = Reveal().getQueryHash() || {};
+
+      var options = extend(defaultOptions, {"width":1780,"height":620,"margin":0.04,"progress":true,"transition":"none","slideNumber":true,"_":[".\\rlcc.md"],"static":"RLCC-checkpoint-0312"}, queryOptions);
+    </script>
+
+
+    <script>
+      Reveal.initialize(options);
+      Reveal.addEventListener('ready', function (event) {
+        const blocks = Reveal.getRevealElement().querySelectorAll('pre code:not(.mermaid)');
+        const hlp = Reveal.getPlugin('highlight');
+        blocks.forEach(hlp.highlightBlock);
+      });
+    </script>
+
+    <script>
+      const mermaidOptions = extend({ startOnLoad: false }, {});
+      mermaid.startOnLoad = false;
+      mermaid.initialize(mermaidOptions);
+      const cb = function (event) { mermaid.init(mermaidOptions, '.stack.present>.present pre code.mermaid'); };
+      Reveal.addEventListener('ready', cb);
+      Reveal.addEventListener('slidetransitionend', cb);
+    </script>
+  </body>
+</html>
